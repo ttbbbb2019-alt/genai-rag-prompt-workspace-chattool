@@ -1,0 +1,46 @@
+name: smoke-build
+on: 
+  push:
+  pull_request:
+jobs:
+  build-cdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install latest CDK CLI
+        run: |
+          npm install -g aws-cdk@latest
+          cdk --version
+      - name: Formatting
+        run: |
+          npm ci
+          cd ./lib/user-interface/react-app
+          npm ci
+          cd -
+          npm run lint
+      - name: Backend
+        run: |
+          npm ci
+          npm audit
+          npm run build
+          npm run test
+          cdk synth
+      - name: PyTests
+        # Suppression of pip audit failure until langchain is upgraded.
+        run: |
+          pip install -r pytest_requirements.txt
+          flake8 .
+          bandit -c bandit.yaml -r .
+          pip-audit -r pytest_requirements.txt
+          pip-audit -r lib/shared/web-crawler-batch-job/requirements.txt
+          pip-audit -r lib/shared/file-import-batch-job/requirements.txt
+          pytest tests/
+      - name: Frontend
+        working-directory: ./lib/user-interface/react-app
+        run: |
+          npm ci
+          npm audit
+          npm run build
