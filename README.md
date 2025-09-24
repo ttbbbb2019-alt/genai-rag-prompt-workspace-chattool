@@ -1,6 +1,6 @@
-# My GenAI Chatbot with Prompt Management
+# GenAI RAG Prompt Workspace Chattool
 
-A customized AWS GenAI LLM Chatbot with enhanced prompt management capabilities.
+A GenAI-powered RAG workspace chattool with intelligent prompt management for interactive problem-solving through conversational I/O.
 
 ## Features
 

@@ -1,9 +1,9 @@
 {
-  "name": "my-genai-chatbot-with-prompts",
-  "description": "Custom AWS GenAI LLM Chatbot with Prompt Management - Enhanced version with prompt template management capabilities",
+  "name": "genai-rag-prompt-workspace-chattool",
+  "description": "GenAI-powered RAG workspace chattool with intelligent prompt management for interactive problem-solving through conversational I/O",
   "version": "1.0.0",
   "bin": {
-    "aws-genai-llm-chatbot": "bin/aws-genai-llm-chatbot.js"
+    "genai-rag-prompt-workspace-chattool": "bin/genai-rag-prompt-workspace-chattool.js"
   },
   "engines": {
     "node": ">=18.0.0 <21.0.0"
