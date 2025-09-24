@@ -9,7 +9,10 @@
     "build:dev": "tsc && cross-env NODE_ENV=development vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "format": "npx prettier --ignore-path .gitignore --write \"**/*.+(tsx|js|ts|json)\""
+    "format": "npx prettier --ignore-path .gitignore --write \"**/*.+(tsx|js|ts|json)\"",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^5.3.3",
@@ -36,6 +39,10 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^29.5.14",
     "@types/luxon": "^3.3.2",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
@@ -51,8 +58,12 @@
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8.4.27",
     "sass": "^1.65.1",
+    "ts-jest": "^29.4.4",
     "typescript": "^5.0.2",
     "vite": "^6.3.5",
     "zen-observable": "^0.10.0"
