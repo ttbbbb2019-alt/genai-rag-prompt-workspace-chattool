@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Container, Header, SpaceBetween, Button, Table, Modal, Form, FormField, Input, Textarea } from '@cloudscape-design/components';
+import { useNavigate } from 'react-router-dom';
 
 interface Prompt {
   id: string;
@@ -9,6 +10,7 @@ interface Prompt {
 }
 
 export default function Prompts() {
+  const navigate = useNavigate();
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
@@ -62,6 +64,13 @@ export default function Prompts() {
     savePrompts(prompts.filter(p => p.id !== id));
   };
 
+  const handleUse = (prompt: Prompt) => {
+    // Store the selected prompt in sessionStorage for the chat to pick up
+    sessionStorage.setItem('selectedPrompt', prompt.content);
+    // Navigate to chat playground
+    navigate('/chatbot/playground');
+  };
+
   return (
     <Container>
       <SpaceBetween size="l">
@@ -105,6 +114,7 @@ export default function Prompts() {
               header: 'Actions',
               cell: (item: Prompt) => (
                 <SpaceBetween direction="horizontal" size="xs">
+                  <Button variant="primary" onClick={() => handleUse(item)}>Use</Button>
                   <Button onClick={() => handleEdit(item)}>Edit</Button>
                   <Button onClick={() => handleDelete(item.id)}>Delete</Button>
                 </SpaceBetween>

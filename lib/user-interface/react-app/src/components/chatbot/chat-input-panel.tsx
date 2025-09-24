@@ -432,6 +432,19 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
     }
   }, [state.selectedModelMetadata]);
 
+  // Check for pre-selected prompt from prompts page
+  useEffect(() => {
+    const selectedPrompt = sessionStorage.getItem('selectedPrompt');
+    if (selectedPrompt) {
+      setState(prevState => ({
+        ...prevState,
+        value: selectedPrompt
+      }));
+      // Clear the stored prompt after using it
+      sessionStorage.removeItem('selectedPrompt');
+    }
+  }, []);
+
   const getChatBotMode = (
     outputModality: ChabotOutputModality
   ): ChatBotMode => {
