@@ -18,6 +18,7 @@ Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
 
 // Mock sessionStorage
 const mockSessionStorage = {
+  getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
 };

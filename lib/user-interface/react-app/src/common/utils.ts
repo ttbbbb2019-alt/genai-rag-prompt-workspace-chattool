@@ -1,6 +1,6 @@
 export class Utils {
   static isDevelopment() {
-    return import.meta.env.MODE === "development";
+    return process.env.NODE_ENV === 'development';
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-types

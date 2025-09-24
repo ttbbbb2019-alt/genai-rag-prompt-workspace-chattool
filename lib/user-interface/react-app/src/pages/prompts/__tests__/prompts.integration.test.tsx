@@ -30,9 +30,19 @@ const mockChatProps = {
     maxTokens: 512,
     temperature: 0.6,
     topP: 0.9,
+    seed: 0,
+    images: [],
+    documents: [],
+    videos: [],
+    filesBlob: {
+      images: null,
+      documents: null,
+      videos: null,
+    },
   },
   setConfiguration: jest.fn(),
   session: { id: 'test-session', loading: false },
+  setApplication: jest.fn(),
 };
 
 describe('Prompts to Chat Integration', () => {
@@ -94,5 +104,32 @@ describe('Prompts to Chat Integration', () => {
     await waitFor(() => {
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('selectedPrompt');
     });
+  });
+
+  test('create, edit, and delete prompt workflow', async () => {
+    mockLocalStorage.getItem.mockReturnValue('[]');
+    
+    render(
+      <BrowserRouter>
+        <Prompts />
+      </BrowserRouter>
+    );
+
+    // Create new prompt
+    fireEvent.click(screen.getByText('Create Prompt'));
+    
+    const nameInput = screen.getByPlaceholderText('Enter prompt name');
+    const contentTextarea = screen.getByPlaceholderText('Enter prompt content');
+    
+    fireEvent.change(nameInput, { target: { value: 'Test Prompt' } });
+    fireEvent.change(contentTextarea, { target: { value: 'Test content' } });
+    
+    fireEvent.click(screen.getByText('Create'));
+
+    // Verify localStorage was updated
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      'chatbot-prompts',
+      expect.stringContaining('Test Prompt')
+    );
   });
 });

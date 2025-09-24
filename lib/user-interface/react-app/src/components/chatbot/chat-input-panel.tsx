@@ -9,6 +9,7 @@ import {
   ButtonGroup,
   ButtonGroupProps,
   FileTokenGroup,
+  Textarea,
 } from "@cloudscape-design/components";
 import {
   Dispatch,
@@ -128,6 +129,12 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
     ReadyState.UNINSTANTIATED
   );
 
+  // Prompt management states
+  const [prompts, setPrompts] = useState<Array<{id: string, name: string, content: string}>>([]);
+  const [selectedPrompt, setSelectedPrompt] = useState<SelectProps.Option | null>(null);
+  const [promptTemplate, setPromptTemplate] = useState<string>(''); // Store the selected prompt template
+  const [userInput, setUserInput] = useState<string>(''); // Store user's actual input
+
   const messageHistoryRef = useRef<ChatBotHistoryItem[]>([]);
   const isMediaGenerationModel = (outputModality?: ChabotOutputModality) => {
     if (!outputModality) return false;
@@ -139,6 +146,33 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
   useEffect(() => {
     messageHistoryRef.current = props.messageHistory;
   }, [props.messageHistory]);
+
+  // Load prompts from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('chatbot-prompts');
+    if (saved) {
+      setPrompts(JSON.parse(saved));
+    }
+  }, []);
+
+  // Check for selected prompt from sessionStorage (from prompts page)
+  useEffect(() => {
+    const selectedPromptContent = sessionStorage.getItem('selectedPrompt');
+    const selectedPromptId = sessionStorage.getItem('selectedPromptId');
+    const selectedPromptName = sessionStorage.getItem('selectedPromptName');
+    
+    if (selectedPromptContent && selectedPromptId && selectedPromptName) {
+      setPromptTemplate(selectedPromptContent);
+      setSelectedPrompt({
+        label: selectedPromptName,
+        value: selectedPromptId
+      });
+      // Clear after use
+      sessionStorage.removeItem('selectedPrompt');
+      sessionStorage.removeItem('selectedPromptId');
+      sessionStorage.removeItem('selectedPromptName');
+    }
+  }, []);
 
   useEffect(() => {
     async function subscribe() {
@@ -227,7 +261,7 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
 
   useEffect(() => {
     if (transcript) {
-      setState((state) => ({ ...state, value: transcript }));
+      setUserInput(transcript);
     }
   }, [transcript]);
 
@@ -432,18 +466,28 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
     }
   }, [state.selectedModelMetadata]);
 
-  // Check for pre-selected prompt from prompts page
-  useEffect(() => {
-    const selectedPrompt = sessionStorage.getItem('selectedPrompt');
-    if (selectedPrompt) {
-      setState(prevState => ({
-        ...prevState,
-        value: selectedPrompt
-      }));
-      // Clear the stored prompt after using it
-      sessionStorage.removeItem('selectedPrompt');
+  // Prepare prompt options for the select dropdown
+  const promptOptions: SelectProps.Option[] = useMemo(() => [
+    { label: "No prompt template", value: "" },
+    ...prompts.map(prompt => ({
+      label: prompt.name,
+      value: prompt.id,
+      description: prompt.content.substring(0, 100) + (prompt.content.length > 100 ? '...' : '')
+    }))
+  ], [prompts]);
+
+  // Handle prompt selection
+  const handlePromptSelection = (selectedOption: SelectProps.Option | null) => {
+    setSelectedPrompt(selectedOption);
+    if (selectedOption && selectedOption.value) {
+      const prompt = prompts.find(p => p.id === selectedOption.value);
+      if (prompt) {
+        setPromptTemplate(prompt.content);
+      }
+    } else {
+      setPromptTemplate('');
     }
-  }, []);
+  };
 
   const getChatBotMode = (
     outputModality: ChabotOutputModality
@@ -464,11 +508,18 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
     if (readyState !== ReadyState.OPEN) return;
     ChatScrollState.userHasScrolled = false;
 
+    // Combine prompt template with user input
+    let finalMessage = userInput.trim();
+    if (promptTemplate.trim()) {
+      // If there's a prompt template, combine it with user input
+      finalMessage = promptTemplate.trim() + '\n\nUser Question: ' + userInput.trim();
+    }
+
     let name, provider;
     if (!props.applicationId) {
       if (state.selectedAgent) {
         // Agent request
-        const value = state.value.trim();
+        const value = finalMessage;
         let modelName, provider;
         if (state.selectedModel) {
           ({ name: modelName, provider } = OptionsHelper.parseValue(
@@ -547,7 +598,7 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
       ));
     }
 
-    const value = state.value.trim();
+    const value = finalMessage;
     const request: ChatBotRunRequest = props.applicationId
       ? {
           action: ChatBotAction.Run,
@@ -630,6 +681,7 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
     setImages([]);
     setDocuments([]);
     setVideos([]);
+    setUserInput(''); // Clear user input after sending
 
     props.setMessageHistory(messageHistoryRef.current);
 
@@ -889,15 +941,27 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
             />
           )}
           <Box className={styles.prompt_input_wrapper}>
+            {promptTemplate && (
+              <Box margin={{ bottom: "s" }}>
+                <Textarea
+                  value={promptTemplate}
+                  placeholder="Prompt template will appear here when selected"
+                  rows={4}
+                  onChange={(e) => setPromptTemplate(e.detail.value)}
+                />
+              </Box>
+            )}
             <PromptInput
               data-locator="prompt-input"
-              value={state.value}
+              value={userInput}
               placeholder={
                 listening
                   ? "Listening..."
                   : props.running
                     ? "Generating a response"
-                    : "Send a message"
+                    : promptTemplate 
+                      ? "Enter your question here..."
+                      : "Send a message"
               }
               actionButtonAriaLabel="Send"
               maxRows={6}
@@ -905,7 +969,7 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
               autoFocus={true}
               disabled={props.running}
               onChange={(e) =>
-                setState((state) => ({ ...state, value: e.detail.value }))
+                setUserInput(e.detail.value)
               }
               onAction={handleSendMessage}
               actionButtonIconName="send"
@@ -915,12 +979,9 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
                   const messages = props.messageHistory.filter(
                     (i) => i.type === ChatBotMessageType.Human
                   );
-                  if (state.value.length === 0 && messages.length > 0) {
+                  if (userInput.length === 0 && messages.length > 0) {
                     // Set previous message if empty and key press up
-                    setState((state) => ({
-                      ...state,
-                      value: messages[messages.length - 1].content,
-                    }));
+                    setUserInput(messages[messages.length - 1].content);
                   }
                 }
               }}
@@ -987,7 +1048,7 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
                   !state.selectedAgent &&
                   !props.applicationId) ||
                 props.running ||
-                state.value.trim().length === 0 ||
+                userInput.trim().length === 0 ||
                 props.session.loading
               }
             />
@@ -1071,6 +1132,16 @@ export default function ChatInputPanel(props: ChatInputPanelProps) {
                     value: agent.agentRuntimeArn,
                   })) || []
                 }
+              />
+              <Select
+                data-locator="select-prompt"
+                disabled={props.running}
+                placeholder="Select a prompt template (optional)"
+                filteringType="auto"
+                selectedOption={selectedPrompt}
+                onChange={({ detail }) => handlePromptSelection(detail.selectedOption)}
+                options={promptOptions}
+                empty="No prompt templates available"
               />
               {appContext?.config.rag_enabled && (
                 <Select

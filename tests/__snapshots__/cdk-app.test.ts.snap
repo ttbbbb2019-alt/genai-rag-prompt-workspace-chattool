@@ -2,7 +2,7 @@
 
 exports[`snapshot test with CMK 1`] = `
 {
-  "Description": "Description: (uksb-1tupboc45) (version:0.1.293) (tag:C4:0,C5:0,C6:2,C7:0) ",
+  "Description": "Description: (uksb-1tupboc45) (version:0.1.309) (tag:C4:0,C5:0,C6:2,C7:0) ",
   "Mappings": {
     "RagEnginesSageMakerModelImageRepositoryCfnMappingF3891114": {
       "af-south-1": {
@@ -1292,7 +1292,7 @@ def sort_filter_rules(json_obj):
             "Arn",
           ],
         },
-        "Runtime": "python3.11",
+        "Runtime": "python3.13",
         "Timeout": 300,
       },
       "Type": "AWS::Lambda::Function",
@@ -1363,7 +1363,12 @@ def sort_filter_rules(json_obj):
             {
               "Action": "s3:PutBucketNotification",
               "Effect": "Allow",
-              "Resource": "*",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "RagEnginesDataImportUploadBucket061D697E",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -5440,7 +5445,7 @@ schema {
             "Arn",
           ],
         },
-        "Runtime": "python3.11",
+        "Runtime": "python3.13",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -16060,6 +16065,7 @@ schema {
         "SourceObjectKeys": [
           "Dummy",
         ],
+        "WaitForDistributionInvalidation": true,
       },
       "Type": "Custom::CDKBucketDeployment",
       "UpdateReplacePolicy": "Delete",
@@ -17174,6 +17180,7 @@ schema {
         "SourceObjectKeys": [
           "Dummy",
         ],
+        "WaitForDistributionInvalidation": true,
       },
       "Type": "Custom::CDKBucketDeployment",
       "UpdateReplacePolicy": "Delete",
@@ -22039,6 +22046,7 @@ schema {
         "SourceObjectKeys": [
           "Dummy",
         ],
+        "WaitForDistributionInvalidation": true,
       },
       "Type": "Custom::CDKBucketDeployment",
       "UpdateReplacePolicy": "Delete",

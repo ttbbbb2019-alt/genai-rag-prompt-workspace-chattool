@@ -75,7 +75,7 @@
   .input_controls_selects_2 {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     align-items: center;
     gap: awsui.$space-scaled-xs;
   }
@@ -83,7 +83,7 @@
   .input_controls_selects_1 {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     align-items: center;
     gap: awsui.$space-scaled-xs;
   }

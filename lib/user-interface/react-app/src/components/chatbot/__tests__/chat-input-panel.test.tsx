@@ -1,18 +1,41 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import ChatInputPanel from '../chat-input-panel';
+import { AppContext } from '../../../common/app-context';
 
-// Mock sessionStorage
-const mockSessionStorage = {
-  getItem: jest.fn(),
-  removeItem: jest.fn(),
-};
-Object.defineProperty(window, 'sessionStorage', { value: mockSessionStorage });
+// Mock dependencies
+jest.mock('react-speech-recognition', () => ({
+  useSpeechRecognition: () => ({
+    transcript: '',
+    listening: false,
+    browserSupportsSpeechRecognition: true,
+  }),
+  __esModule: true,
+  default: {
+    startListening: jest.fn(),
+    stopListening: jest.fn(),
+  },
+}));
 
-// Mock props
-const mockProps = {
+jest.mock('aws-amplify', () => ({
+  API: {
+    graphql: jest.fn(),
+  },
+}));
+
+const mockAppContext = {
+  config: {
+    rag_enabled: true,
+    aws_project_region: 'us-east-1',
+    aws_user_pools_id: 'test-pool-id',
+    aws_user_pools_web_client_id: 'test-client-id',
+  },
+} as any;
+
+const defaultProps = {
   running: false,
   setRunning: jest.fn(),
+  session: { id: 'test-session', loading: false },
   messageHistory: [],
   setMessageHistory: jest.fn(),
   configuration: {
@@ -21,40 +44,68 @@ const mockProps = {
     maxTokens: 512,
     temperature: 0.6,
     topP: 0.9,
+    images: null,
+    documents: null,
+    videos: null,
+    seed: 0,
+    filesBlob: {
+      images: null,
+      documents: null,
+      videos: null,
+    },
   },
   setConfiguration: jest.fn(),
-  session: { id: 'test-session', loading: false },
+  setApplication: jest.fn(),
 };
 
-const renderWithRouter = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
+const renderWithContext = (component: React.ReactElement) => {
+  return render(
+    <AppContext.Provider value={mockAppContext}>
+      <BrowserRouter>
+        {component}
+      </BrowserRouter>
+    </AppContext.Provider>
+  );
 };
 
-describe('ChatInputPanel - Prompt Prefill Feature', () => {
+describe('ChatInputPanel Prompt Selection', () => {
   beforeEach(() => {
+    // Mock localStorage
+    const mockPrompts = [
+      { id: '1', name: 'Test Prompt', content: 'This is a test prompt' },
+      { id: '2', name: 'Another Prompt', content: 'Another test prompt content' },
+    ];
+    localStorage.setItem('chatbot-prompts', JSON.stringify(mockPrompts));
+  });
+
+  afterEach(() => {
+    localStorage.clear();
     jest.clearAllMocks();
   });
 
-  test('prefills prompt from sessionStorage on mount', async () => {
-    const testPrompt = 'Test prompt from storage';
-    mockSessionStorage.getItem.mockReturnValue(testPrompt);
-
-    renderWithRouter(<ChatInputPanel {...mockProps} />);
-
+  test('loads prompts from localStorage', async () => {
+    renderWithContext(<ChatInputPanel {...defaultProps} />);
+    
     await waitFor(() => {
-      expect(mockSessionStorage.getItem).toHaveBeenCalledWith('selectedPrompt');
-      expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('selectedPrompt');
+      const promptSelect = screen.getByDisplayValue('Select a prompt template (optional)');
+      expect(promptSelect).toBeInTheDocument();
     });
   });
 
-  test('does not prefill when no prompt in sessionStorage', async () => {
-    mockSessionStorage.getItem.mockReturnValue(null);
-
-    renderWithRouter(<ChatInputPanel {...mockProps} />);
-
+  test('handles prompt selection', async () => {
+    renderWithContext(<ChatInputPanel {...defaultProps} />);
+    
     await waitFor(() => {
-      expect(mockSessionStorage.getItem).toHaveBeenCalledWith('selectedPrompt');
-      expect(mockSessionStorage.removeItem).not.toHaveBeenCalled();
+      const promptSelect = screen.getByDisplayValue('Select a prompt template (optional)');
+      fireEvent.change(promptSelect, { target: { value: '1' } });
     });
+  });
+
+  test('handles sessionStorage prompt from prompts page', () => {
+    sessionStorage.setItem('selectedPrompt', 'Test prompt content');
+    
+    renderWithContext(<ChatInputPanel {...defaultProps} />);
+    
+    expect(sessionStorage.getItem('selectedPrompt')).toBeNull();
   });
 });
