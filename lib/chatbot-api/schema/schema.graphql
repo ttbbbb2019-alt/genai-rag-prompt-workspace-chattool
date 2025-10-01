@@ -395,6 +395,20 @@ type Application @aws_cognito_user_pools {
   updateTime: AWSDateTime
 }
 
+input ChatInput {
+  messages: [MessageInput!]!
+}
+
+input MessageInput {
+  role: String!
+  content: String!
+}
+
+type ChatResponse @aws_cognito_user_pools {
+  id: String!
+  content: String!
+}
+
 type Mutation {
   createKendraWorkspace(input: CreateWorkspaceKendraInput!): Workspace!
     @aws_cognito_user_pools(cognito_groups: ["admin", "workspace_manager"])
@@ -438,6 +452,7 @@ type Mutation {
     @aws_cognito_user_pools(cognito_groups: ["admin"])
   deleteApplication(id: String!): Boolean
     @aws_cognito_user_pools(cognito_groups: ["admin"])
+  chat(input: ChatInput!): ChatResponse @aws_iam
 }
 
 type Query {

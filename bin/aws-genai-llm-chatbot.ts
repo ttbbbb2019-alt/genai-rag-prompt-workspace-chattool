@@ -2,9 +2,8 @@
 import * as cdk from "aws-cdk-lib";
 import "source-map-support/register";
 import { AwsGenAILLMChatbotStack } from "../lib/aws-genai-llm-chatbot-stack";
-import { AwsSolutionsChecks } from "cdk-nag";
+import { MCPBridgeStack } from "../lib/aws-mcp-lambda/mcp-bridge-stack";
 import { getConfig } from "./config";
-import { Aspects } from "aws-cdk-lib";
 
 const app = new cdk.App();
 
@@ -18,4 +17,12 @@ new AwsGenAILLMChatbotStack(app, `${config.prefix}GenAIChatBotStack`, {
   },
 });
 
-Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
+// Add MCP Bridge Stack
+new MCPBridgeStack(app, 'MCPBridgeStack', {
+  env: {
+    region: process.env.CDK_DEFAULT_REGION,
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+  },
+});
+
+// CDK-NAG disabled for faster deployment

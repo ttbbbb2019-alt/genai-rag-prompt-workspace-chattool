@@ -4,7 +4,7 @@
   "retainOnDelete": false,
   "bedrock": {
     "enabled": false,
-    "region": "us-east-1"
+    "region": "region"
   },
   "nexus": {
     "enabled": false,

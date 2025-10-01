@@ -38,6 +38,13 @@
 - **Monitoring & Logging**: Comprehensive observability with CloudWatch
 - **API Access**: RESTful APIs for programmatic integration
 
+### 🔌 Model Context Protocol (MCP) Support
+- **MCP Server**: AWS Lambda-based MCP server implementation
+- **CLI Client**: Command-line interface for MCP interactions
+- **WebSocket/HTTP APIs**: Real-time and REST communication
+- **Cognito Authentication**: Secure user authentication and authorization
+- **Multi-Server Management**: Connect to multiple MCP servers simultaneously
+
 ### 📊 Analytics & Insights
 - **Usage Analytics**: Track workspace and prompt usage patterns
 - **Performance Metrics**: Monitor response times and accuracy
@@ -75,6 +82,9 @@ npx cdk deploy --require-approval never
 
 # Or deploy specific stacks
 npx cdk deploy ChatbotStack
+
+# Deploy MCP Bridge (optional)
+npx cdk deploy MCPBridgeStack
 ```
 
 ### 4. Access Your Application
@@ -102,6 +112,60 @@ npx cdk deploy ChatbotStack
 2. Choose relevant prompt template
 3. Start conversational interaction
 4. Export results or continue in new session
+
+### Using MCP (Model Context Protocol)
+1. Deploy MCP Bridge: `npx cdk deploy MCPBridgeStack`
+2. Create Cognito user and get JWT token
+3. Connect CLI client: `./bin/genai-chat.js mcp add-server aws-prod wss://your-api-id.execute-api.region.amazonaws.com/prod`
+4. Start interactive session: `./bin/genai-chat.js`
+
+## 🔌 MCP (Model Context Protocol) Usage
+
+### Quick Start with MCP
+
+```bash
+# Deploy MCP infrastructure
+npx cdk deploy MCPBridgeStack
+
+# Add MCP server
+./bin/genai-chat.js mcp add-server aws-prod wss://your-api-id.execute-api.region.amazonaws.com/prod
+
+# Start interactive chat
+./bin/genai-chat.js
+```
+
+### MCP Commands
+
+```bash
+# Server management
+./bin/genai-chat.js mcp add-server <name> <url>
+./bin/genai-chat.js mcp list-servers
+./bin/genai-chat.js mcp set-active <name>
+
+# Tool operations
+./bin/genai-chat.js mcp list-tools
+./bin/genai-chat.js mcp call-tool <name> --args '{"key": "value"}'
+
+# Chat functionality
+./bin/genai-chat.js mcp chat "Hello, explain AWS Lambda"
+```
+
+### Interactive MCP Session
+
+```
+genai-chat> Hello, can you help me understand AWS services?
+🤖 Response: Of course! AWS provides a rich set of cloud services...
+
+genai-chat> /tools
+🔧 Available Tools:
+  • chat: Chat with GenAI models
+
+genai-chat> /tool chat {"messages": [{"role": "user", "content": "What is serverless?"}]}
+🔧 Tool execution completed: Serverless computing allows you to run code without managing servers...
+
+genai-chat> /quit
+👋 Goodbye!
+```
 
 ## 🧪 Testing
 
@@ -144,6 +208,13 @@ npm run test:ui
 - **Cognito**: User authentication and authorization
 - **CloudWatch**: Monitoring and logging
 
+### MCP (Model Context Protocol)
+- **Lambda MCP Server**: Serverless MCP protocol implementation
+- **WebSocket API**: Real-time MCP communication
+- **HTTP API**: REST-based MCP endpoints
+- **Cognito Authentication**: JWT-based security
+- **CLI Client**: Command-line MCP client with interactive mode
+
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -152,7 +223,7 @@ npm run test:ui
 cp .env.example .env
 
 # Configure your settings
-BEDROCK_REGION=us-east-1
+BEDROCK_REGION=region
 KNOWLEDGE_BASE_BUCKET=your-kb-bucket
 DEFAULT_MODEL=anthropic.claude-v2
 ```
@@ -177,6 +248,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 ## 🆘 Support
 
 - 📚 [Documentation](docs/)
+- 🔌 [MCP Usage Guide](MCP_README.md)
 - 🐛 [Issue Tracker](https://github.com/ttbbbb2019-alt/genai-rag-prompt-workspace-chattool/issues)
 - 💬 [Discussions](https://github.com/ttbbbb2019-alt/genai-rag-prompt-workspace-chattool/discussions)
 

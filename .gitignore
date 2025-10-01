@@ -1,3 +1,19 @@
+# CDK output directory
+cdk.out/
+
+# Sensitive configuration files
+.env.local
+.env.production
+config.local.json
+**/aws-exports.json
+
+# Test snapshots (may contain sensitive data)
+tests/__snapshots__/
+tests/**/__snapshots__/
+
+# Security cleanup documentation (for internal use only)
+SECURITY_CLEANUP.md
+
 # Created by https://www.toptal.com/developers/gitignore/api/macos,windows,linux,amplify,node,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,windows,linux,amplify,node,python
 
@@ -17,6 +33,7 @@ amplifyconfiguration.json
 amplify-build-config.json
 amplify-gradle-config.json
 amplifyxc.config
+.graphqlconfig.yml
 
 ### Linux ###
 *~
@@ -478,3 +495,4 @@ node_modules
 AmazonQ.md
 .DS_Store
 cdk-exports.json
+.graphqlconfig.yml

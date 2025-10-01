@@ -10,7 +10,7 @@ projects:
         codeGenTarget: typescript
         generatedFileName: lib/user-interface/react-app/src/API.ts
         docsFilePath: lib/user-interface/react-app/src/graphql/  #The field is not configured correctly and needs to be changed
-        region: us-east-1
+        region: region
         apiId: null
         frontend: javascript
         framework: react
