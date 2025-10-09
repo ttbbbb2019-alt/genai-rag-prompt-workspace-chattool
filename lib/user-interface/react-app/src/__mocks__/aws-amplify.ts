@@ -1,18 +1,19 @@
 export const API = {
-  graphql: jest.fn().mockResolvedValue({ data: {} }),
-  get: jest.fn().mockResolvedValue({}),
-  post: jest.fn().mockResolvedValue({}),
-  put: jest.fn().mockResolvedValue({}),
-  del: jest.fn().mockResolvedValue({}),
+  graphql: jest.fn(),
 };
 
 export const Auth = {
-  currentAuthenticatedUser: jest.fn().mockResolvedValue({}),
-  signOut: jest.fn().mockResolvedValue({}),
+  currentAuthenticatedUser: jest.fn(),
+  signOut: jest.fn(),
 };
 
-export const Storage = {
-  get: jest.fn().mockResolvedValue(''),
-  put: jest.fn().mockResolvedValue({}),
-  remove: jest.fn().mockResolvedValue({}),
+export const Hub = {
+  listen: jest.fn(),
+  remove: jest.fn(),
+};
+
+export default {
+  API,
+  Auth,
+  Hub,
 };

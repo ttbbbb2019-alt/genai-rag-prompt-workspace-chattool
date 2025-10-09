@@ -1,6 +1,7 @@
 from common.constant import ID_FIELD_VALIDATION, SAFE_PROMPT_STR_REGEX
 import genai_core.semantic_search
 from pydantic import BaseModel, Field
+from typing import List
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler.appsync import Router
 from genai_core.auth import UserPermissions
@@ -14,6 +15,12 @@ permissions = UserPermissions(router)
 class SemanticSearchRequest(BaseModel):
     workspaceId: str = ID_FIELD_VALIDATION
     query: str = Field(max_length=256, pattern=SAFE_PROMPT_STR_REGEX)
+
+
+class SemanticSearchCompareRequest(BaseModel):
+    workspaceId: str = ID_FIELD_VALIDATION
+    prompts: List[str] = Field(min_items=1, max_items=10)
+    limit: int = Field(default=25, ge=1, le=100)
 
 
 @router.resolver(field_name="performSemanticSearch")
@@ -33,6 +40,52 @@ def semantic_search(input: dict):
     result = _convert_semantic_search_result(request.workspaceId, result)
 
     return result
+
+
+@router.resolver(field_name="performSemanticSearchCompare")
+@tracer.capture_method
+@permissions.approved_roles(
+    [permissions.ADMIN_ROLE, permissions.WORKSPACES_MANAGER_ROLE]
+)
+def semantic_search_compare(input: dict):
+    request = SemanticSearchCompareRequest(**input)
+    
+    # Validate prompts
+    for prompt in request.prompts:
+        if len(prompt) > 256:
+            raise ValueError(f"Prompt exceeds maximum length of 256 characters")
+    
+    result = genai_core.semantic_search.semantic_search_compare_prompts(
+        workspace_id=request.workspaceId,
+        prompts=request.prompts,
+        limit=request.limit,
+        full_response=True,
+    )
+    
+    # Convert results for each prompt to array format
+    prompts_comparison = []
+    for prompt_key, prompt_data in result["prompts_comparison"].items():
+        if "error" in prompt_data:
+            prompts_comparison.append({
+                "prompt": prompt_data["prompt"],
+                "error": prompt_data["error"],
+                "result": None
+            })
+        else:
+            prompts_comparison.append({
+                "prompt": prompt_data["prompt"],
+                "result": _convert_semantic_search_result(request.workspaceId, prompt_data["result"]),
+                "error": None
+            })
+    
+    converted_result = {
+        "workspaceId": result["workspace_id"],
+        "totalPrompts": result["total_prompts"],
+        "engine": result["engine"],
+        "promptsComparison": prompts_comparison
+    }
+    
+    return converted_result
 
 
 def _convert_semantic_search_result(workspace_id: str, result: dict):

@@ -496,3 +496,4 @@ AmazonQ.md
 .DS_Store
 cdk-exports.json
 .graphqlconfig.yml
+genai-rag-prompt-workspace-chattool.iml

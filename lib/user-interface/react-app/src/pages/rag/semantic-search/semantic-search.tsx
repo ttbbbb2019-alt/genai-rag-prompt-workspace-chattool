@@ -27,6 +27,7 @@ import { useSearchParams } from "react-router-dom";
 import { Utils } from "../../../common/utils";
 import SemanticSearchDetails from "./semantic-search-details";
 import ResultItems from "./result-items";
+import SemanticSearchCompare from "./semantic-search-compare";
 import { CHATBOT_NAME } from "../../../common/constants";
 import { SemanticSearchResult, Workspace } from "../../../API";
 
@@ -48,6 +49,7 @@ export default function SemanticSearch() {
   const [workspacesLoadingStatus, setWorkspacesLoadingStatus] =
     useState<LoadingStatus>("loading");
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("single-search");
   const { data, onChange, errors, validate } = useForm<SemanticSearchData>({
     initialValue: () => {
       return {
@@ -134,10 +136,106 @@ export default function SemanticSearch() {
     console.log("re-render");
   }
 
-  const tabs: TabsProps.Tab[] = [];
+  const resultTabs: TabsProps.Tab[] = [];
+
+  const mainTabs: TabsProps.Tab[] = [
+    {
+      label: "Single Search",
+      id: "single-search",
+      content: (
+        <SpaceBetween size="l">
+          <Form
+            actions={
+              <SpaceBetween
+                direction="horizontal"
+                size="l"
+                alignItems="center"
+              >
+                {submitting && (
+                  <StatusIndicator type="loading">Loading</StatusIndicator>
+                )}
+                <Button
+                  variant="primary"
+                  data-locator="submit"
+                  onClick={onSearch}
+                >
+                  Search
+                </Button>
+              </SpaceBetween>
+            }
+            errorText={globalError}
+          >
+            <SpaceBetween size="l">
+              <Container
+                footer={
+                  searchResult && (
+                    <SemanticSearchDetails
+                      searchResults={searchResult}
+                      detailsExpanded={detailsExpanded}
+                      setDetailsExpanded={setDetailsExpanded}
+                    />
+                  )
+                }
+              >
+                <SpaceBetween size="l">
+                  <FormField label="Workspace" errorText={errors.workspace}>
+                    <Select
+                      data-locator="select-workspace"
+                      loadingText="Loading workspaces (might take few seconds)..."
+                      statusType={workspacesLoadingStatus}
+                      placeholder="Select a workspace"
+                      filteringType="auto"
+                      selectedOption={data.workspace}
+                      options={workspaceOptions}
+                      onChange={({ detail: { selectedOption } }) => {
+                        onChange({ workspace: selectedOption });
+                        setSearchParams((current) => ({
+                          ...Utils.urlSearchParamsToRecord(current),
+                          workspaceId: selectedOption.value ?? "",
+                        }));
+                      }}
+                      empty={"No Workspaces available"}
+                    />
+                  </FormField>
+                  <FormField label="Search Query" errorText={errors.query}>
+                    <Textarea
+                      data-locator="query"
+                      value={data.query}
+                      onChange={({ detail: { value } }) =>
+                        onChange({ query: value })
+                      }
+                    />
+                  </FormField>
+                </SpaceBetween>
+              </Container>
+            </SpaceBetween>
+          </Form>
+          {searchResult && searchResult.items && (
+            <>
+              {searchResult.items.length === 0 && (
+                <Container>
+                  <Header variant="h3" data-locator="no-result">
+                    No results found
+                  </Header>
+                </Container>
+              )}
+              {searchResult.items.length > 0 && <Tabs tabs={resultTabs} />}
+            </>
+          )}
+        </SpaceBetween>
+      ),
+    },
+    {
+      label: "Compare Prompts",
+      id: "compare-prompts",
+      content: (
+        <SemanticSearchCompare workspaceId={data.workspace?.value || ""} />
+      ),
+    },
+  ];
 
   if (searchResult) {
-    tabs.push({
+    resultTabs.push({
       label: "Results",
       id: "results",
       content: (
@@ -149,7 +247,7 @@ export default function SemanticSearch() {
       searchResult.vectorSearchItems &&
       searchResult.vectorSearchItems.length > 0
     ) {
-      tabs.push({
+      resultTabs.push({
         label: "Vector Search",
         id: "vector-search",
         content: (
@@ -165,7 +263,7 @@ export default function SemanticSearch() {
       searchResult.keywordSearchItems &&
       searchResult.keywordSearchItems.length > 0
     ) {
-      tabs.push({
+      resultTabs.push({
         label: "Keyword Search",
         id: "keyword-search",
         content: (
@@ -214,86 +312,11 @@ export default function SemanticSearch() {
       }
       content={
         <ContentLayout header={<Header variant="h1">Semantic Search</Header>}>
-          <SpaceBetween size="l">
-            <Form
-              actions={
-                <SpaceBetween
-                  direction="horizontal"
-                  size="l"
-                  alignItems="center"
-                >
-                  {submitting && (
-                    <StatusIndicator type="loading">Loading</StatusIndicator>
-                  )}
-                  <Button
-                    variant="primary"
-                    data-locator="submit"
-                    onClick={onSearch}
-                  >
-                    Search
-                  </Button>
-                </SpaceBetween>
-              }
-              errorText={globalError}
-            >
-              <SpaceBetween size="l">
-                <Container
-                  footer={
-                    searchResult && (
-                      <SemanticSearchDetails
-                        searchResults={searchResult}
-                        detailsExpanded={detailsExpanded}
-                        setDetailsExpanded={setDetailsExpanded}
-                      />
-                    )
-                  }
-                >
-                  <SpaceBetween size="l">
-                    <FormField label="Workspace" errorText={errors.workspace}>
-                      <Select
-                        data-locator="select-workspace"
-                        loadingText="Loading workspaces (might take few seconds)..."
-                        statusType={workspacesLoadingStatus}
-                        placeholder="Select a workspace"
-                        filteringType="auto"
-                        selectedOption={data.workspace}
-                        options={workspaceOptions}
-                        onChange={({ detail: { selectedOption } }) => {
-                          onChange({ workspace: selectedOption });
-                          setSearchParams((current) => ({
-                            ...Utils.urlSearchParamsToRecord(current),
-                            workspaceId: selectedOption.value ?? "",
-                          }));
-                        }}
-                        empty={"No Workspaces available"}
-                      />
-                    </FormField>
-                    <FormField label="Search Query" errorText={errors.query}>
-                      <Textarea
-                        data-locator="query"
-                        value={data.query}
-                        onChange={({ detail: { value } }) =>
-                          onChange({ query: value })
-                        }
-                      />
-                    </FormField>
-                  </SpaceBetween>
-                </Container>
-              </SpaceBetween>
-            </Form>
-            {searchResult && searchResult.items && (
-              <>
-                {searchResult.items.length === 0 && (
-                  <Container>
-                    <Header variant="h3" data-locator="no-result">
-                      No results found
-                    </Header>
-                  </Container>
-                )}
-                {searchResult.items.length > 0 && <Tabs tabs={tabs} />}
-              </>
-            )}
-          </SpaceBetween>
+          <Tabs 
+            tabs={mainTabs} 
+            activeTabId={activeTab}
+            onChange={({ detail }) => setActiveTab(detail.activeTabId)}
+          />
         </ContentLayout>
       }
       info={

@@ -236,6 +236,12 @@ input SemanticSearchInput {
   query: String!
 }
 
+input SemanticSearchCompareInput {
+  workspaceId: String!
+  prompts: [String!]!
+  limit: Int
+}
+
 input ManageApplicationInput {
   id: String
   name: String!
@@ -284,6 +290,19 @@ type SemanticSearchResult @aws_cognito_user_pools {
   vectorSearchMetric: String
   vectorSearchItems: [SemanticSearchItem!]
   keywordSearchItems: [SemanticSearchItem!]
+}
+
+type SemanticSearchPromptResult @aws_cognito_user_pools {
+  prompt: String!
+  result: SemanticSearchResult
+  error: String
+}
+
+type SemanticSearchCompareResult @aws_cognito_user_pools {
+  workspaceId: String!
+  totalPrompts: Int!
+  engine: String!
+  promptsComparison: [SemanticSearchPromptResult!]!
 }
 
 type Session @aws_cognito_user_pools {
@@ -471,6 +490,8 @@ type Query {
   listRagEngines: [RagEngine!]!
     @aws_cognito_user_pools(cognito_groups: ["admin", "workspace_manager"])
   performSemanticSearch(input: SemanticSearchInput!): SemanticSearchResult!
+    @aws_cognito_user_pools(cognito_groups: ["admin", "workspace_manager"])
+  performSemanticSearchCompare(input: SemanticSearchCompareInput!): SemanticSearchCompareResult!
     @aws_cognito_user_pools(cognito_groups: ["admin", "workspace_manager"])
   listSessions: [Session!]! @aws_cognito_user_pools
   listEmbeddingModels: [EmbeddingModel!]!

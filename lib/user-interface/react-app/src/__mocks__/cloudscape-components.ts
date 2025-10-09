@@ -1,21 +1,29 @@
 import * as React from 'react';
 
-export const Container = ({ children }: any) =>
-  React.createElement('div', { 'data-testid': 'container' }, children);
+export const Container = ({ children, header }: any) =>
+  React.createElement('div', { 'data-testid': 'container' }, 
+    header && React.createElement('div', { 'data-testid': 'container-header' }, header),
+    children
+  );
 
-export const Header = ({ children }: any) =>
-  React.createElement('h1', { 'data-testid': 'header' }, children);
+export const Header = ({ children, variant, description }: any) =>
+  React.createElement('div', {},
+    React.createElement('h1', { 'data-testid': 'header', className: variant ? `header-${variant}` : '' }, children),
+    description && React.createElement('div', { 'data-testid': 'header-description' }, description)
+  );
 
 export const SpaceBetween = ({ children }: any) =>
   React.createElement('div', { 'data-testid': 'space-between' }, children);
 
-export const Button = ({ children, onClick, disabled, variant }: any) =>
+export const Button = ({ children, onClick, disabled, variant, iconName }: any) =>
   React.createElement('button', {
     'data-testid': 'button',
     className: variant ? `awsui-button-variant-${variant}` : '',
     onClick,
-    disabled
-  }, children);
+    disabled,
+    'aria-label': iconName || undefined,
+    name: iconName || undefined
+  }, children || iconName);
 
 export const ButtonGroup = ({ items }: any) =>
   React.createElement('div', { 'data-testid': 'button-group' },
@@ -71,13 +79,20 @@ export const Modal = ({ visible, header, children, footer, onDismiss }: any) =>
     React.createElement('button', { onClick: onDismiss }, 'Close')
   ) : null;
 
-export const Form = ({ children }: any) =>
-  React.createElement('form', { 'data-testid': 'form' }, children);
+export const Form = ({ children, actions }: any) =>
+  React.createElement('form', { 
+    'data-testid': 'form',
+    onSubmit: (e: any) => e.preventDefault() // Prevent form submission to avoid JSDOM issues
+  }, 
+    children,
+    actions && React.createElement('div', { 'data-testid': 'form-actions' }, actions)
+  );
 
-export const FormField = ({ label, children }: any) =>
+export const FormField = ({ label, children, secondaryControl }: any) =>
   React.createElement('div', { 'data-testid': 'form-field' },
     React.createElement('label', {}, label),
-    children
+    children,
+    secondaryControl
   );
 
 export const Input = ({ value, onChange, placeholder }: any) =>
@@ -94,6 +109,14 @@ export const Textarea = ({ value, onChange, placeholder }: any) =>
     value,
     onChange: (e: any) => onChange?.({ detail: { value: e.target.value } }),
     placeholder
+  });
+
+export const Toggle = ({ checked, onChange }: any) =>
+  React.createElement('input', {
+    type: 'checkbox',
+    'data-testid': 'toggle',
+    checked,
+    onChange: (e: any) => onChange?.({ detail: { checked: e.target.checked } })
   });
 
 export const Select = ({ selectedOption, onChange, options, placeholder }: any) =>
@@ -120,4 +143,46 @@ export const PromptInput = ({ value, onChange, onAction, disabled }: any) =>
       rows: 4
     }),
     React.createElement('button', { onClick: onAction, disabled }, 'Send')
+  );
+
+export const Alert = ({ type, children, dismissible, onDismiss, header }: any) =>
+  React.createElement('div', { 
+    'data-testid': 'alert',
+    className: `alert-${type}`
+  },
+    header && React.createElement('div', { 'data-testid': 'alert-header' }, header),
+    React.createElement('div', {}, children),
+    dismissible && React.createElement('button', { 
+      onClick: onDismiss,
+      'aria-label': 'dismiss'
+    }, '×')
+  );
+
+export const Tabs = ({ tabs }: any) =>
+  React.createElement('div', { 'data-testid': 'tabs' },
+    tabs?.map((tab: any, idx: number) =>
+      React.createElement('div', { key: idx },
+        React.createElement('button', {}, tab.label),
+        React.createElement('div', {}, tab.content)
+      )
+    )
+  );
+
+export const ExpandableSection = ({ headerText, children }: any) =>
+  React.createElement('div', { 'data-testid': 'expandable-section' },
+    React.createElement('button', {}, headerText),
+    React.createElement('div', {}, children)
+  );
+
+// Mock components for semantic search
+export const ResultItems = ({ searchResult, searchQuery }: any) =>
+  React.createElement('div', { 'data-testid': 'result-items' },
+    React.createElement('div', {}, `Results for: ${searchQuery}`),
+    React.createElement('div', {}, `Found ${searchResult?.items?.length || 0} items`)
+  );
+
+export const SemanticSearchDetails = ({ searchResults }: any) =>
+  React.createElement('div', { 'data-testid': 'semantic-search-details' },
+    React.createElement('div', {}, 'Search Details'),
+    React.createElement('div', {}, `Engine: ${searchResults?.engine || 'opensearch'}`)
   );

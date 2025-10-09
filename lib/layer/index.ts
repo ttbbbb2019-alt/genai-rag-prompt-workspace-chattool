@@ -32,6 +32,11 @@ export class Layer extends Construct {
           "bash",
           "-c",
           [
+            // Install Rust compiler for tiktoken with proper permissions
+            `export CARGO_HOME=/tmp/.cargo`,
+            `export RUSTUP_HOME=/tmp/.rustup`,
+            `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path`,
+            `export PATH="/tmp/.cargo/bin:$PATH"`,
             `pip install -r requirements.txt ${args.join(" ")}`,
             `cd /asset-output/python`,
             // Remove sqlalchemy, used by Langchain when storing the memory using sql
