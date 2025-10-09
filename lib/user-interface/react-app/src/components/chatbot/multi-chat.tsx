@@ -15,6 +15,7 @@ import {
   StatusIndicator,
   Container,
   Alert,
+  PromptInput,
 } from "@cloudscape-design/components";
 import { v4 as uuidv4 } from "uuid";
 import { AppContext } from "../../common/app-context";
@@ -33,6 +34,7 @@ import {
   ChatBotMessageResponse,
   ChatBotMessageType,
   ChatBotRunRequest,
+  ChatBotCompareRequest,
   ChatBotMode,
   ChabotOutputModality,
   ChatBotHeartbeatRequest,
@@ -54,6 +56,7 @@ export interface ChatSession {
   model?: SelectProps.Option;
   modelMetadata?: Model;
   workspace?: SelectProps.Option;
+  comparePrompt?: string;
   id: string;
   loading: boolean;
   running: boolean;
@@ -114,6 +117,7 @@ export default function MultiChat() {
     undefined
   );
   const [showMetadata, setShowMetadata] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
   const [readyState, setReadyState] = useState<ReadyState>(
     ReadyState.UNINSTANTIATED
   );
@@ -186,9 +190,78 @@ export default function MultiChat() {
     !chatSessions.some((c) => c.loading) &&
     !chatSessions.some((c) => !c.model);
 
+  const handleSendComparePrompts = async (prompts: string[]): Promise<void> => {
+    if (!enabled || prompts.length < 2) return;
+    
+    const firstSession = chatSessions[0];
+    if (!firstSession?.workspace?.value) return;
+
+    try {
+      const request: ChatBotCompareRequest = {
+        action: ChatBotAction.Compare,
+        modelInterface: ChatBotModelInterface.Langchain,
+        data: {
+          sessionId: firstSession.id,
+          workspaceId: firstSession.workspace.value,
+          prompts: prompts
+        }
+      };
+
+      // Add compare request to message history
+      firstSession.messageHistory = [
+        ...firstSession.messageHistory,
+        {
+          type: ChatBotMessageType.Human,
+          content: `Compare prompts:\n${prompts.map((p, i) => `${i + 1}. ${p}`).join('\n')}`,
+          metadata: {},
+        },
+        {
+          type: ChatBotMessageType.AI,
+          content: "",
+          metadata: {},
+        },
+      ];
+      
+      firstSession.running = true;
+      setChatSessions([...chatSessions]);
+
+      const result = API.graphql({
+        query: sendQuery,
+        variables: {
+          data: JSON.stringify(request),
+        },
+      });
+      console.log(result);
+      
+    } catch (error) {
+      console.error('Compare prompts error:', error);
+      firstSession.running = false;
+      setChatSessions([...chatSessions]);
+    }
+  };
+
   const handleSendMessage = (message: string): void => {
     if (!enabled) return;
-    // send message to each chat session
+    
+    // In compare mode, collect individual prompts and user input message
+    if (compareMode) {
+      const individualPrompts = chatSessions
+        .filter(s => s.comparePrompt?.trim())
+        .map(s => s.comparePrompt!.trim());
+      
+      // Add user input message to prompts array
+      const allPrompts = message.trim() ? [...individualPrompts, message.trim()] : individualPrompts;
+      
+      if (allPrompts.length >= 2) {
+        handleSendComparePrompts(allPrompts);
+        // Clear the individual prompts after sending
+        chatSessions.forEach(s => s.comparePrompt = "");
+        setChatSessions([...chatSessions]);
+      }
+      return;
+    }
+    
+    // Regular mode: send message to each chat session
     setEnableAddModels(false);
     chatSessions.forEach((chatSession) => {
       if (chatSession.running) return;
@@ -427,6 +500,12 @@ export default function MultiChat() {
             >
               Show Metadata
             </Toggle>
+            <Toggle
+              checked={compareMode}
+              onChange={({ detail }) => setCompareMode(detail.checked)}
+            >
+              Compare Prompts
+            </Toggle>
             <Button
               onClick={() => addSession()}
               disabled={!enableAddModels || chatSessions.length >= 4}
@@ -545,6 +624,19 @@ export default function MultiChat() {
                     empty={"No Workspaces available"}
                   />
                 )}
+                {compareMode && (
+                  <PromptInput
+                    value={chatSession.comparePrompt || ""}
+                    placeholder={`Prompt for ${chatSession.model?.label || 'this model'}`}
+                    maxRows={3}
+                    minRows={1}
+                    disabled={chatSession.running}
+                    onChange={({ detail }) => {
+                      chatSession.comparePrompt = detail.value;
+                      setChatSessions([...chatSessions]);
+                    }}
+                  />
+                )}
               </SpaceBetween>
             </Container>
           ))}
@@ -568,14 +660,14 @@ export default function MultiChat() {
             </ColumnLayout>
           );
         })}
-      </SpaceBetween>
-      <div>
         <MultiChatInputPanel
           running={chatSessions.some((c) => c.running)}
           enabled={enabled}
           onSendMessage={handleSendMessage}
+          onSendComparePrompts={handleSendComparePrompts}
+          compareMode={compareMode}
         />
-      </div>
+      </SpaceBetween>
     </div>
   );
 }

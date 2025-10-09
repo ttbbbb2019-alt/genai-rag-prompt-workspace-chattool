@@ -80,6 +80,161 @@ def handle_heartbeat(record):
     )
 
 
+def handle_compare(record):
+    user_id = record["userId"]
+    user_groups = record["userGroups"]
+    data = record["data"]
+    session_id = data.get("sessionId")
+    workspace_id = data.get("workspaceId")
+    prompts = data.get("prompts", [])
+    system_prompts = record.get("systemPrompts", {})
+    
+    # Get model info from first session (assuming all use same model for comparison)
+    # In production, this could be passed in the request
+    provider = "anthropic"  # Default, should be configurable
+    model_id = "claude-3-haiku-20240307"  # Default, should be configurable
+    mode = "chain"
+    
+    try:
+        # Send initial response
+        send_to_client(
+            connection_id=session_id,
+            message=json.dumps({
+                "type": "text",
+                "action": ChatbotAction.LLM_NEW_TOKEN.value,
+                "timestamp": str(int(round(datetime.now().timestamp()))),
+                "userId": user_id,
+                "data": {
+                    "sessionId": session_id,
+                    "type": "text",
+                    "content": f"Comparing {len(prompts)} prompts using workspace {workspace_id}...\n\n",
+                    "metadata": {}
+                }
+            }),
+            user_id=user_id,
+        )
+        
+        # Get model adapter (same as handle_run)
+        adapter = registry.get_adapter(f"{provider}.{model_id}")
+        
+        comparison_results = []
+        
+        # Process each prompt with real model
+        for i, prompt in enumerate(prompts):
+            try:
+                # Create model instance for each prompt
+                model = adapter(
+                    model_id=model_id,
+                    mode=mode,
+                    session_id=f"{session_id}_prompt_{i}",
+                    user_id=user_id,
+                    model_kwargs={"temperature": 0.1, "maxTokens": 512},
+                )
+                
+                # Call real model (same as handle_run)
+                response = model.run(
+                    prompt=prompt,
+                    workspace_id=workspace_id,
+                    user_groups=user_groups,
+                    images=[],
+                    documents=[],
+                    videos=[],
+                    system_prompts=system_prompts,
+                )
+                
+                comparison_results.append({
+                    "prompt": prompt,
+                    "response": response.get("content", "No response"),
+                    "metadata": response.get("metadata", {}),
+                    "index": i
+                })
+                
+                # Send intermediate progress
+                send_to_client(
+                    connection_id=session_id,
+                    message=json.dumps({
+                        "type": "text",
+                        "action": ChatbotAction.LLM_NEW_TOKEN.value,
+                        "timestamp": str(int(round(datetime.now().timestamp()))),
+                        "userId": user_id,
+                        "data": {
+                            "sessionId": session_id,
+                            "type": "text",
+                            "content": f"Completed prompt {i+1}/{len(prompts)}\n",
+                            "metadata": {}
+                        }
+                    }),
+                    user_id=user_id,
+                )
+                
+            except Exception as e:
+                logger.exception(f"Error processing prompt {i}")
+                comparison_results.append({
+                    "prompt": prompt,
+                    "response": f"Error: {str(e)}",
+                    "metadata": {},
+                    "index": i
+                })
+        
+        # Send final comparison results
+        final_response = {
+            "type": "text",
+            "action": ChatbotAction.FINAL_RESPONSE.value,
+            "timestamp": str(int(round(datetime.now().timestamp()))),
+            "userId": user_id,
+            "data": {
+                "sessionId": session_id,
+                "type": "text",
+                "content": format_comparison_results(comparison_results),
+                "metadata": {"compareResults": comparison_results, "workspaceId": workspace_id}
+            }
+        }
+        
+        send_to_client(
+            connection_id=session_id,
+            message=json.dumps(final_response),
+            user_id=user_id,
+        )
+        
+    except Exception as e:
+        logger.exception("Compare error")
+        error_response = {
+            "type": "text", 
+            "action": "error",
+            "userId": user_id,
+            "data": {
+                "sessionId": session_id,
+                "content": f"Compare failed: {str(e)}"
+            }
+        }
+        send_to_client(
+            connection_id=session_id,
+            message=json.dumps(error_response),
+            user_id=user_id,
+        )
+
+def format_comparison_results(results):
+    workspace_id = results[0].get('metadata', {}).get('workspaceId', 'unknown') if results else 'unknown'
+    content = f"## Prompt Comparison Results (Workspace: {workspace_id})\n\n"
+    
+    for result in results:
+        i = result['index']
+        content += f"### Prompt {i+1}\n"
+        content += f"**Input:** {result['prompt']}\n\n"
+        content += f"**Response:** {result['response']}\n\n"
+        
+        # Add metadata if available
+        if result.get('metadata'):
+            metadata = result['metadata']
+            if metadata.get('usage'):
+                usage = metadata['usage']
+                content += f"**Usage:** {usage.get('input_tokens', 0)} input tokens, {usage.get('output_tokens', 0)} output tokens\n\n"
+        
+        content += "---\n\n"
+    
+    return content
+
+
 def handle_run(record):
     user_id = record["userId"]
     user_groups = record["userGroups"]
@@ -145,6 +300,8 @@ def record_handler(record: SQSRecord):
 
     if detail["action"] == ChatbotAction.RUN.value:
         handle_run(detail)
+    elif detail["action"] == ChatbotAction.COMPARE.value:
+        handle_compare(detail)
     elif detail["action"] == ChatbotAction.HEARTBEAT.value:
         handle_heartbeat(detail)
 

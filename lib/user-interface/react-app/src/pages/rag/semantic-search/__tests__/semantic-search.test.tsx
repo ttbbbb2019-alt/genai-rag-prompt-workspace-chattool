@@ -85,12 +85,18 @@ import SemanticSearch from "../semantic-search";
 import { AppContext } from "../../../../common/app-context";
 
 const mockAppContext = {
+  aws_project_region: "us-east-1",
+  aws_user_pools_id: "test-pool", 
+  aws_user_pools_web_client_id: "test-client",
   config: {
-    region: "us-east-1",
-    userPoolId: "test-pool",
-    userPoolWebClientId: "test-client",
-    identityPoolId: "test-identity",
-    graphqlEndpoint: "https://test.appsync-api.us-east-1.amazonaws.com/graphql",
+    rag_enabled: true,
+    cross_encoders_enabled: false,
+    sagemaker_embeddings_enabled: false,
+    api_endpoint: "https://test.execute-api.us-east-1.amazonaws.com/prod/",
+    websocket_endpoint: "wss://test.execute-api.us-east-1.amazonaws.com/prod/",
+    default_embeddings_model: "amazon.titan-embed-text-v1",
+    default_cross_encoder_model: "cross-encoder/ms-marco-MiniLM-L-12-v2",
+    privateWebsite: false,
   },
 };
 

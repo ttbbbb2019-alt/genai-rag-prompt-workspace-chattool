@@ -88,6 +88,7 @@ class ChatbotMode(Enum):
 class ChatbotAction(Enum):
     HEARTBEAT = "heartbeat"
     RUN = "run"
+    COMPARE = "compare"
     LLM_NEW_TOKEN = "llm_new_token"  # nosec B105 False positive, this is not password
     THINKING_STEP = "thinking_step"  # For intermediate thinking process messages
     FINAL_RESPONSE = "final_response"

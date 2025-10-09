@@ -13,7 +13,9 @@ import SpeechRecognition, {
 export interface MultiChatInputPanelProps {
   running: boolean;
   enabled: boolean;
+  compareMode: boolean;
   onSendMessage: (msg: string) => void;
+  onSendComparePrompts?: (prompts: string[]) => void;
 }
 
 export abstract class ChatScrollState {
@@ -73,51 +75,46 @@ export default function MultiChatInputPanel(props: MultiChatInputPanelProps) {
 
   return (
     <SpaceBetween direction="vertical" size="xs">
-      <div
-        style={{ display: "flex", justifyContent: "end", paddingRight: "4px" }}
-      ></div>
-      <div>
-        <PromptInput
-          data-locator="prompt-input"
-          value={value}
-          placeholder={
-            listening
-              ? "Listening..."
-              : props.running
-                ? "Generating a response"
-                : "Send a message"
-          }
-          maxRows={6}
-          minRows={1}
-          autoFocus={true}
-          disabled={props.running || !props.enabled}
-          onChange={({ detail }) => setValue(detail.value)}
-          onAction={() => {
-            props.onSendMessage(value);
-            setValue("");
-          }}
-          actionButtonIconName="send"
-          actionButtonAriaLabel="Send"
-          disableSecondaryActionsPaddings
-          secondaryActions={
-            <Box padding={{ left: "xxs", top: "xs" }}>
-              <ButtonGroup
-                ariaLabel="Chat actions"
-                items={secondaryActions}
-                variant="icon"
-                onItemClick={(item) => {
-                  if (item.detail.id === "record") {
-                    listening
-                      ? SpeechRecognition.stopListening()
-                      : SpeechRecognition.startListening();
-                  }
-                }}
-              />
-            </Box>
-          }
-          disableActionButton={!props.enabled || value.trim().length === 0}
-        />
-      </div>
+      <PromptInput
+        data-locator="prompt-input"
+        value={value}
+        placeholder={
+          listening
+            ? "Listening..."
+            : props.running
+              ? "Generating a response"
+              : "Send a message"
+        }
+        maxRows={6}
+        minRows={1}
+        autoFocus={true}
+        disabled={props.running}
+        onChange={({ detail }) => setValue(detail.value)}
+        onAction={() => {
+          props.onSendMessage(value);
+          setValue("");
+        }}
+        actionButtonIconName="send"
+        actionButtonAriaLabel="Send"
+        disableSecondaryActionsPaddings
+        secondaryActions={
+          <Box padding={{ left: "xxs", top: "xs" }}>
+            <ButtonGroup
+              ariaLabel="Chat actions"
+              items={secondaryActions}
+              variant="icon"
+              onItemClick={(item) => {
+                if (item.detail.id === "record") {
+                  listening
+                    ? SpeechRecognition.stopListening()
+                    : SpeechRecognition.startListening();
+                }
+              }}
+            />
+          </Box>
+        }
+        disableActionButton={!props.enabled || value.trim().length === 0}
+      />
     </SpaceBetween>
   );
 }

@@ -55,6 +55,7 @@ export enum ChatBotMessageType {
 export enum ChatBotAction {
   Heartbeat = "heartbeat",
   Run = "run",
+  Compare = "compare",
   FinalResponse = "final_response",
   LLMNewToken = "llm_new_token",
   ThinkingStep = "thinking_step",
@@ -91,6 +92,17 @@ export interface ChatBotHeartbeatRequest {
   data: {
     sessionId: string;
   };
+}
+
+export interface ChatBotCompareRequest {
+  action: ChatBotAction.Compare;
+  modelInterface?: ModelInterface;
+  data?: {
+    sessionId: string;
+    workspaceId: string;
+    prompts: string[];
+  };
+  applicationId?: string;
 }
 
 export interface ChatBotRunRequest {
