@@ -16,6 +16,8 @@
 - **Template Library**: Organize and categorize prompt templates
 - **Version Control**: Track prompt changes and iterations
 - **Import/Export**: Share prompt templates across workspaces
+- **Prompt Comparison**: Side-by-side comparison of different prompts for semantic search and chat playground
+- **A/B Testing**: Compare prompt performance across multiple variations simultaneously
 
 ### 🏢 Workspace Management
 - **Multi-Workspace Support**: Create and manage separate workspaces for different projects
@@ -30,6 +32,8 @@
 - **Multi-turn Conversations**: Handle complex, multi-step problem resolution
 - **Rich Media Support**: Handle text, images, documents, and structured data
 - **Export Conversations**: Save and share problem-solving sessions
+- **Multi-Chat Playground**: Compare responses from different models and prompts simultaneously
+- **Semantic Search Comparison**: Side-by-side evaluation of search results with different prompt configurations
 
 ### 🔧 Enterprise Features
 - **AWS Integration**: Native AWS services integration (S3, DynamoDB, Lambda, etc.)
@@ -106,6 +110,21 @@ npx cdk deploy MCPBridgeStack
 2. Define your prompt with variables: `{{variable_name}}`
 3. Test with sample inputs
 4. Save and organize in categories
+5. Use "Compare" feature to evaluate multiple prompt variations side-by-side
+
+### Prompt Comparison & A/B Testing
+1. Navigate to "Semantic Search" → "Compare Prompts"
+2. Configure multiple prompt variations
+3. Run the same query against different prompts
+4. Analyze results side-by-side for optimal performance
+5. Export comparison results for team review
+
+### Multi-Chat Playground
+1. Access "Chat Playground" → "Multi-Chat Compare"
+2. Set up multiple chat sessions with different models/prompts
+3. Send the same message to all sessions simultaneously
+4. Compare responses in real-time
+5. Fine-tune prompts based on comparative results
 
 ### Problem-Solving Session
 1. Select your workspace
@@ -169,7 +188,7 @@ genai-chat> /quit
 
 ## 🧪 Testing
 
-Comprehensive test suite with 95%+ coverage:
+Comprehensive test suite with 95%+ coverage including new prompt comparison features:
 
 ```bash
 # Run all tests
@@ -182,8 +201,12 @@ npm run pytest
 # Integration tests
 npm run test:integration
 
-# UI tests
+# UI tests (including prompt comparison components)
 npm run test:ui
+
+# Semantic search comparison tests
+npm run test tests/unit/test_semantic_search.py
+npm run test tests/integration/test_semantic_search_integration.py
 ```
 
 📋 **[View Detailed Test Documentation](tests/README.md)**
@@ -194,6 +217,8 @@ npm run test:ui
 - **React + TypeScript**: Modern, responsive web interface
 - **AWS Amplify**: Authentication and API integration
 - **Material-UI**: Consistent design system
+- **Multi-Chat Components**: Side-by-side chat comparison interface
+- **Semantic Search Comparison**: Advanced prompt evaluation UI
 
 ### Backend
 - **AWS Lambda**: Serverless compute for API endpoints
@@ -201,6 +226,8 @@ npm run test:ui
 - **DynamoDB**: NoSQL database for conversations and prompts
 - **S3**: Document storage and knowledge base
 - **CloudFront**: Global content delivery
+- **GraphQL API**: Enhanced semantic search with prompt comparison endpoints
+- **Multi-Model Support**: Parallel processing for prompt comparison workflows
 
 ### Infrastructure
 - **AWS CDK**: Infrastructure as Code
