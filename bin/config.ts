@@ -28,21 +28,21 @@ export function getConfig(): SystemConfig {
       sagemaker: [],
     },
     rag: {
-      enabled: false,
+      enabled: true,
       engines: {
         aurora: {
-          enabled: false,
+          enabled: true,
         },
         opensearch: {
-          enabled: false,
+          enabled: true,
         },
         kendra: {
-          enabled: false,
-          createIndex: false,
-          enterprise: false,
+          enabled: true,
+          createIndex: true,
+          enterprise: true,
         },
         knowledgeBase: {
-          enabled: false,
+          enabled: true,
         },
       },
       embeddingsModels: [
@@ -87,7 +87,7 @@ export function getConfig(): SystemConfig {
           default: false,
         },
       ],
-      crossEncodingEnabled: false,
+      crossEncodingEnabled: true,
       crossEncoderModels: [
         {
           provider: "sagemaker",
@@ -95,6 +95,12 @@ export function getConfig(): SystemConfig {
           default: true,
         },
       ],
+    },
+    langsmith: {
+      enabled: true,
+      apiKey: "",
+      project: "genai-rag-workspace",
+      endpoint: "https://api.smith.langchain.com",
     },
   };
 }

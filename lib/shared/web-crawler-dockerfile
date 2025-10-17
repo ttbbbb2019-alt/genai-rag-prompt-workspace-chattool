@@ -1,10 +1,12 @@
-FROM public.ecr.aws/docker/library/python:3.10-alpine
-
+FROM public.ecr.aws/docker/library/python:3.10-alpine as builder
 WORKDIR /app
-COPY web-crawler-batch-job/requirements.txt requirements.txt
-RUN pip install -r requirements.txt 
+COPY web-crawler-batch-job/requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
+FROM public.ecr.aws/docker/library/python:3.10-alpine
+WORKDIR /app
+COPY --from=builder /root/.local /root/.local
 COPY layers/python-sdk/python/ .
 COPY web-crawler-batch-job/index.py ./index.py
-
+ENV PATH=/root/.local/bin:$PATH
 CMD ["python3", "index.py"]

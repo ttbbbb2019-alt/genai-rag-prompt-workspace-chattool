@@ -13,6 +13,7 @@ import * as path from "path";
 import { RagEngines } from "../../rag-engines";
 import { Shared } from "../../shared";
 import { SystemConfig } from "../../shared/types";
+import { loadLangSmithConfig } from "../../shared/langsmith-config";
 import { AURORA_DB_USERS } from "../../rag-engines/aurora-pgvector";
 
 interface LangChainInterfaceProps {
@@ -32,6 +33,9 @@ export class LangChainInterface extends Construct {
 
   constructor(scope: Construct, id: string, props: LangChainInterfaceProps) {
     super(scope, id);
+
+    // Load LangSmith configuration
+    const langSmithConfig = loadLangSmithConfig();
 
     const requestHandler = new lambda.Function(this, "RequestHandler", {
       vpc: props.shared.vpc,
@@ -85,6 +89,13 @@ export class LangChainInterface extends Construct {
         DEFAULT_KENDRA_S3_DATA_SOURCE_BUCKET_NAME:
           props.ragEngines?.kendraRetrieval?.kendraS3DataSourceBucket
             ?.bucketName ?? "",
+        // LangSmith Configuration
+        ...(langSmithConfig.enabled && {
+          LANGSMITH_ENABLED: "true",
+          LANGSMITH_API_KEY: langSmithConfig.apiKey || "",
+          LANGSMITH_PROJECT: langSmithConfig.project || "genai-rag-workspace",
+          LANGSMITH_ENDPOINT: langSmithConfig.endpoint || "https://api.smith.langchain.com",
+        }),
       },
     });
 

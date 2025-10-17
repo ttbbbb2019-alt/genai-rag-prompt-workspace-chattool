@@ -14,6 +14,9 @@ import adapters  # noqa: F401 Needed to register the adapters
 from genai_core.utils.websocket import send_to_client
 from genai_core.types import ChatbotAction
 
+# LangSmith integration
+from langsmith_config import langsmith_enabled
+
 processor = BatchProcessor(event_type=EventType.SQS)
 tracer = Tracer()
 logger = Logger()
@@ -251,6 +254,11 @@ def handle_run(record):
     system_prompts = record.get("systemPrompts", {})
     if not session_id:
         session_id = str(uuid.uuid4())
+
+    # LangSmith: Add metadata for tracing
+    if langsmith_enabled:
+        os.environ["LANGCHAIN_SESSION_ID"] = session_id
+        os.environ["LANGCHAIN_USER_ID"] = user_id
 
     adapter = registry.get_adapter(f"{provider}.{model_id}")
 

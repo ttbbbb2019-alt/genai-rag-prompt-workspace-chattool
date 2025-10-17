@@ -65,7 +65,7 @@ export default function GlobalHeader() {
           {
             type: "button",
             text: "GitHub",
-            href: "https://github.com/aws-samples/aws-genai-llm-chatbot",
+            href: "https://github.com/ttbbbb2019-alt/genai-rag-prompt-workspace-chattool/tree/main",
             external: true,
             externalIconAriaLabel: " (opens in a new tab)",
           },

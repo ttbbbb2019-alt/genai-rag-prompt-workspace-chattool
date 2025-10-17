@@ -9,7 +9,7 @@ const app = new cdk.App();
 
 const config = getConfig();
 
-new AwsGenAILLMChatbotStack(app, `${config.prefix}GenAIChatBotStack`, {
+new AwsGenAILLMChatbotStack(app, `genai-chatbotGenAIChatBotStack`, {
   config,
   env: {
     region: process.env.CDK_DEFAULT_REGION,

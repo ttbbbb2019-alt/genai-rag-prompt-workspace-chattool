@@ -93,9 +93,16 @@ class ModelAdapter:
 
         self.callback_handler = LLMStartHandler()
         self.__bind_callbacks()
+        self.__setup_langsmith_callbacks()
 
         self.chat_history = self.get_chat_history()
         self.llm = self.get_llm(model_kwargs)
+
+    def __setup_langsmith_callbacks(self):
+        """Setup LangSmith callbacks for tracing"""
+        # LangSmith callbacks are automatically handled by LangChain when 
+        # LANGCHAIN_TRACING_V2 is enabled. No additional setup needed.
+        pass
 
     def __bind_callbacks(self):
         callback_methods = [method for method in dir(self) if method.startswith("on_")]

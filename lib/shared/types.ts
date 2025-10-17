@@ -180,6 +180,12 @@ export interface SystemConfig {
     crossEncodingEnabled: boolean;
     crossEncoderModels: ModelConfig[];
   };
+  langsmith?: {
+    enabled: boolean;
+    apiKey?: string;
+    project?: string;
+    endpoint?: string;
+  };
 }
 
 export interface SageMakerLLMEndpoint {

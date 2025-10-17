@@ -16,6 +16,7 @@ import { parse } from "graphql";
 import { readFileSync } from "fs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { AURORA_DB_USERS } from "../rag-engines/aurora-pgvector";
+import { loadLangSmithConfig } from "../shared/langsmith-config";
 
 export interface ApiResolversProps {
   readonly shared: Shared;
@@ -36,6 +37,9 @@ export class ApiResolvers extends Construct {
   readonly appSyncLambdaResolver: lambda.Function;
   constructor(scope: Construct, id: string, props: ApiResolversProps) {
     super(scope, id);
+
+    // Load LangSmith configuration
+    const langSmithConfig = loadLangSmithConfig();
 
     const apiSecurityGroup = new ec2.SecurityGroup(this, "ApiSecurityGroup", {
       vpc: props.shared.vpc,
@@ -130,6 +134,13 @@ export class ApiResolvers extends Construct {
           RSS_FEED_INGESTOR_FUNCTION:
             props.ragEngines?.dataImport.rssIngestorFunction?.functionArn ?? "",
           COGNITO_USER_POOL_ID: props.userPool.userPoolId,
+          // LangSmith Configuration
+          ...(langSmithConfig.enabled && {
+            LANGSMITH_ENABLED: "true",
+            LANGSMITH_API_KEY: langSmithConfig.apiKey || "",
+            LANGSMITH_PROJECT: langSmithConfig.project || "genai-rag-workspace",
+            LANGSMITH_ENDPOINT: langSmithConfig.endpoint || "https://api.smith.langchain.com",
+          }),
         },
       }
     );
