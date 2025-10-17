@@ -255,16 +255,6 @@ class BedrockChatAdapter(ModelAdapter):
         if len(guardrails.keys()) > 0:
             params["guardrails"] = guardrails
 
-        # Check if Prompt Caching is enabled and supported for this model
-        config = genai_core.parameters.get_config()
-        bedrock_config = config.get("bedrock", {})
-        prompt_caching_config = bedrock_config.get("promptCaching", {})
-        
-        if (prompt_caching_config.get("enabled", False) and 
-            self.model_id in prompt_caching_config.get("supportedModels", [])):
-            params["cache_control"] = True
-            logger.info(f"Enabled Prompt Caching for model: {self.model_id}")
-
         # Log all parameters in a single log entry, including full guardrails
         logger.info(
             f"Creating LLM chain for model {self.model_id}",
@@ -273,7 +263,6 @@ class BedrockChatAdapter(ModelAdapter):
             top_p=top_p,
             max_tokens=max_tokens,
             guardrails=guardrails,
-            cache_control=params.get("cache_control", False),
         )
 
         # Return ChatBedrockConverse instance with the collected params
