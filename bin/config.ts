@@ -22,6 +22,20 @@ export function getConfig(): SystemConfig {
     bedrock: {
       enabled: true,
       region: SupportedRegion.US_EAST_1,
+      promptCaching: {
+        enabled: true,
+        supportedModels: [
+          "us.anthropic.claude-opus-4-1-20250805-v1:0",
+          "us.anthropic.claude-opus-4-20250514-v1:0",
+          "us.anthropic.claude-sonnet-4-5-20250929-v1:0", 
+          "us.anthropic.claude-sonnet-4-20250514-v1:0",
+          "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+          "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+          "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "global.anthropic.claude-sonnet-4-20250514-v1:0",
+          "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+        ]
+      }
     },
     llms: {
       // sagemaker: [SupportedSageMakerModels.FalconLite]

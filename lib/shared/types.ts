@@ -120,6 +120,10 @@ export interface SystemConfig {
       identifier: string;
       version: string;
     };
+    promptCaching?: {
+      enabled?: boolean;
+      supportedModels?: string[];
+    };
   };
   nexus?: {
     enabled?: boolean;
